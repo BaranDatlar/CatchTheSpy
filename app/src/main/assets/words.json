@@ -1,0 +1,52 @@
+{
+  "categories": [
+    {
+      "id": "celebrities",
+      "name": "Ünlüler",
+      "wordPairs": [
+        {"normal": "Tarkan", "spy": "Sezen Aksu"},
+        {"normal": "Kemal Sunal", "spy": "Şener Şen"},
+        {"normal": "Atatürk", "spy": "İnönü"},
+        {"normal": "Cristiano Ronaldo", "spy": "Lionel Messi"},
+        {"normal": "Elon Musk", "spy": "Jeff Bezos"},
+        {"normal": "Beyonce", "spy": "Rihanna"},
+        {"normal": "Tom Cruise", "spy": "Brad Pitt"},
+        {"normal": "Nusret", "spy": "CZN Burak"},
+        {"normal": "Cem Yılmaz", "spy": "Ata Demirer"},
+        {"normal": "Hadise", "spy": "Demet Akalın"}
+      ]
+    },
+    {
+      "id": "foods",
+      "name": "Yemekler",
+      "wordPairs": [
+        {"normal": "Lahmacun", "spy": "Pide"},
+        {"normal": "Döner", "spy": "Şiş Kebap"},
+        {"normal": "Mantı", "spy": "Ravioli"},
+        {"normal": "Baklava", "spy": "Künefe"},
+        {"normal": "Kumpir", "spy": "Patates Kızartması"},
+        {"normal": "İskender", "spy": "Adana Kebap"},
+        {"normal": "Menemen", "spy": "Omlet"},
+        {"normal": "Çiğ Köfte", "spy": "İçli Köfte"},
+        {"normal": "Börek", "spy": "Gözleme"},
+        {"normal": "Sushi", "spy": "Ramen"}
+      ]
+    },
+    {
+      "id": "movies",
+      "name": "Filmler",
+      "wordPairs": [
+        {"normal": "Titanic", "spy": "Avatar"},
+        {"normal": "Harry Potter", "spy": "Lord of the Rings"},
+        {"normal": "Star Wars", "spy": "Star Trek"},
+        {"normal": "Matrix", "spy": "Inception"},
+        {"normal": "Recep İvedik", "spy": "GORA"},
+        {"normal": "Eyvah Eyvah", "spy": "Eyyvah Eyvah 2"},
+        {"normal": "Organize İşler", "spy": "Düğün Dernek"},
+        {"normal": "Avengers", "spy": "Justice League"},
+        {"normal": "Joker", "spy": "Batman"},
+        {"normal": "Frozen", "spy": "Moana"}
+      ]
+    }
+  ]
+}
