@@ -108,10 +108,10 @@ fun LobbyScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = playerCount >= 3
+                enabled = playerCount >= 2
             ) {
                 Text(
-                    text = if (playerCount < 3) "En az 3 oyuncu gerekli" else "Oyunu Başlat",
+                    text = if (playerCount < 2) "En az 2 oyuncu gerekli" else "Oyunu Başlat",
                     fontSize = 18.sp
                 )
             }

@@ -10,8 +10,8 @@ import kotlinx.coroutines.tasks.await
 import kotlin.random.Random
 
 class GameRepository {
-    
-    private val database = FirebaseDatabase.getInstance()
+
+    private val database = FirebaseDatabase.getInstance("https://catchthespy-2f5cd-default-rtdb.europe-west1.firebasedatabase.app")
     private val roomsRef = database.getReference("rooms")
     
     // Generate 6-digit room code

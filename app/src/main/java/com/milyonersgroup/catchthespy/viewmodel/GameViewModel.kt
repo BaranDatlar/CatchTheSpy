@@ -13,30 +13,30 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
-    
+
     private val gameRepository = GameRepository()
-    private val wordRepository = WordRepository(application)
+    private val wordRepository = WordRepository()
     private val scoreRepository = ScoreRepository(application)
     private val auth = FirebaseAuth.getInstance()
-    
+
     private val _currentPlayerId = MutableStateFlow<String?>(null)
     val currentPlayerId: StateFlow<String?> = _currentPlayerId.asStateFlow()
-    
+
     private val _currentRoomCode = MutableStateFlow<String?>(null)
     val currentRoomCode: StateFlow<String?> = _currentRoomCode.asStateFlow()
-    
+
     private val _gameRoom = MutableStateFlow<GameRoom?>(null)
     val gameRoom: StateFlow<GameRoom?> = _gameRoom.asStateFlow()
-    
+
     private val _categories = MutableStateFlow<List<Category>>(emptyList())
     val categories: StateFlow<List<Category>> = _categories.asStateFlow()
-    
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
-    
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-    
+
     init {
         initializeAuth()
         loadCategories()
@@ -62,7 +62,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     private fun loadCategories() {
-        _categories.value = wordRepository.getCategories()
+        viewModelScope.launch {
+            try {
+                val categories = wordRepository.loadCategories()
+                _categories.value = categories
+            } catch (e: Exception) {
+                _error.value = "Kategoriler yüklenemedi: ${e.message}"
+            }
+        }
     }
     
     fun createRoom(playerName: String, categoryId: String, duration: Int) {
@@ -145,34 +152,46 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 val roomCode = _currentRoomCode.value ?: return@launch
                 val room = _gameRoom.value ?: return@launch
                 val categoryId = room.category
-                
+
                 // Get random word pair
                 val wordPair = wordRepository.getRandomWordPair(categoryId) ?: return@launch
-                
+
                 // Select random spy
                 val playerIds = room.players.keys.toList()
                 val spyId = playerIds.random()
-                
-                // Assign words to players
-                val updatedPlayers = room.players.mapValues { (playerId, player) ->
-                    player.copy(
-                        isSpy = playerId == spyId,
-                        word = if (playerId == spyId) wordPair.spy else wordPair.normal
-                    )
-                }
-                
-                val updates = mapOf(
+
+                android.util.Log.d("GameViewModel", "Starting game - Spy ID: $spyId")
+                android.util.Log.d("GameViewModel", "Normal word: ${wordPair.normal}, Spy word: ${wordPair.spy}")
+
+                // Create ONE BIG UPDATE MAP - everything at once!
+                val updates = mutableMapOf<String, Any>(
                     "gameState" to GameState.STARTING.name,
                     "normalWord" to wordPair.normal,
                     "spyWord" to wordPair.spy,
                     "spyId" to spyId,
-                    "players" to updatedPlayers,
                     "gameStartTime" to System.currentTimeMillis()
                 )
-                
+
+                // Add each player's updates to the SAME map
+                room.players.forEach { (playerId, player) ->
+                    val isSpy = playerId == spyId
+                    val word = if (isSpy) wordPair.spy else wordPair.normal
+
+                    // Update individual fields directly in the path
+                    updates["players/$playerId/isSpy"] = isSpy
+                    updates["players/$playerId/word"] = word
+
+                    android.util.Log.d("GameViewModel", "Preparing update for $playerId: isSpy=$isSpy, word=$word")
+                }
+
+                // ONE SINGLE ATOMIC UPDATE
+                android.util.Log.d("GameViewModel", "Sending atomic update with ${updates.size} fields")
                 gameRepository.updateRoom(roomCode, updates)
+                android.util.Log.d("GameViewModel", "Update completed")
+
             } catch (e: Exception) {
                 _error.value = "Oyun başlatılamadı: ${e.message}"
+                android.util.Log.e("GameViewModel", "Error starting game", e)
             }
         }
     }

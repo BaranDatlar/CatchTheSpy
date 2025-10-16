@@ -19,11 +19,29 @@ import com.milyonersgroup.catchthespy.ui.navigation.Screen
 import com.milyonersgroup.catchthespy.ui.screens.*
 import com.milyonersgroup.catchthespy.ui.theme.CatchTheSpyTheme
 import com.milyonersgroup.catchthespy.viewmodel.GameViewModel
+import com.milyonersgroup.catchthespy.util.FirebaseDataInitializer
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Initialize Firebase words (only once)
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        if (!prefs.getBoolean("words_initialized", false)) {
+            FirebaseDataInitializer.initializeWords()
+            prefs.edit().putBoolean("words_initialized", true).apply()
+        }
+
+        // Clear old rooms on startup (cleanup)
+        val lastCleanup = prefs.getLong("last_cleanup", 0)
+        if (System.currentTimeMillis() - lastCleanup > 3600000) { // 1 hour
+            com.google.firebase.database.FirebaseDatabase.getInstance(
+                "https://catchthespy-2f5cd-default-rtdb.europe-west1.firebasedatabase.app"
+            ).getReference("rooms").removeValue()
+            prefs.edit().putLong("last_cleanup", System.currentTimeMillis()).apply()
+        }
+
         setContent {
             CatchTheSpyTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

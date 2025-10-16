@@ -1,17 +1,23 @@
 package com.milyonersgroup.catchthespy.data.model
 
+import com.google.firebase.database.IgnoreExtraProperties
+
+@IgnoreExtraProperties
 data class GameRoom(
-    val roomCode: String = "",
-    val hostId: String = "",
-    val category: String = "",
-    val gameDuration: Int = 300, // seconds
-    val players: Map<String, Player> = emptyMap(),
-    val gameState: GameState = GameState.WAITING,
-    val normalWord: String = "",
-    val spyWord: String = "",
-    val spyId: String = "",
-    val gameStartTime: Long = 0L
-)
+    var roomCode: String = "",
+    var hostId: String = "",
+    var category: String = "",
+    var gameDuration: Int = 300, // seconds
+    var players: Map<String, Player> = emptyMap(),
+    var gameState: GameState = GameState.WAITING,
+    var normalWord: String = "",
+    var spyWord: String = "",
+    var spyId: String = "",
+    var gameStartTime: Long = 0L
+) {
+    // No-argument constructor required for Firebase
+    constructor() : this("", "", "", 300, emptyMap(), GameState.WAITING, "", "", "", 0L)
+}
 
 enum class GameState {
     WAITING,      // Lobby - waiting for players

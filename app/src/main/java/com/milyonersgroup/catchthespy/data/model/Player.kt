@@ -1,10 +1,16 @@
 package com.milyonersgroup.catchthespy.data.model
 
+import com.google.firebase.database.IgnoreExtraProperties
+
+@IgnoreExtraProperties
 data class Player(
-    val id: String = "",
-    val name: String = "",
-    val isHost: Boolean = false,
-    val isReady: Boolean = false,
-    val isSpy: Boolean = false,
-    val word: String = ""
-)
+    var id: String = "",
+    var name: String = "",
+    var isHost: Boolean = false,
+    var isReady: Boolean = false,
+    var isSpy: Boolean = false,
+    var word: String = ""
+) {
+    // No-argument constructor required for Firebase
+    constructor() : this("", "", false, false, false, "")
+}

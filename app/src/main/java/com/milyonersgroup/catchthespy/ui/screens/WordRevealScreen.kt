@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -21,11 +22,21 @@ fun WordRevealScreen(
 ) {
     val gameRoom by viewModel.gameRoom.collectAsState()
     val currentPlayerId by viewModel.currentPlayerId.collectAsState()
-    
+
     val currentPlayer = gameRoom?.players?.get(currentPlayerId)
     val myWord = currentPlayer?.word ?: ""
     val isSpy = currentPlayer?.isSpy ?: false
-    
+    val isHost = gameRoom?.hostId == currentPlayerId
+
+    // Auto navigate when game state changes to PLAYING (for non-host players)
+    LaunchedEffect(gameRoom?.gameState) {
+        if (gameRoom?.gameState == GameState.PLAYING) {
+            navController.navigate(Screen.Game.createRoute(roomCode)) {
+                popUpTo(Screen.WordReveal.createRoute(roomCode)) { inclusive = true }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -39,17 +50,17 @@ fun WordRevealScreen(
             fontWeight = FontWeight.Bold,
             color = if (isSpy) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         )
-        
+
         Spacer(modifier = Modifier.height(32.dp))
-        
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = if (isSpy) 
-                    MaterialTheme.colorScheme.errorContainer 
-                else 
+                containerColor = if (isSpy)
+                    MaterialTheme.colorScheme.errorContainer
+                else
                     MaterialTheme.colorScheme.primaryContainer
             )
         ) {
@@ -71,21 +82,27 @@ fun WordRevealScreen(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(48.dp))
-        
-        Button(
-            onClick = {
-                viewModel.updateGameState(GameState.PLAYING)
-                navController.navigate(Screen.Game.createRoute(roomCode)) {
-                    popUpTo(Screen.WordReveal.createRoute(roomCode)) { inclusive = true }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-        ) {
-            Text("Devam Et", fontSize = 18.sp)
+
+        if (isHost) {
+            Button(
+                onClick = {
+                    viewModel.updateGameState(GameState.PLAYING)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+                Text("Oyunu Başlat", fontSize = 18.sp)
+            }
+        } else {
+            Text(
+                text = "Host oyunu başlatmasını bekleyin...",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
