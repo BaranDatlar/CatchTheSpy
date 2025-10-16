@@ -83,6 +83,16 @@ class GameRepository {
             Result.failure(e)
         }
     }
+
+    // Update a specific player
+    suspend fun updatePlayer(roomCode: String, playerId: String, player: Player): Result<Boolean> {
+        return try {
+            roomsRef.child(roomCode).child("players").child(playerId).setValue(player).await()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     
     // Leave room
     suspend fun leaveRoom(roomCode: String, playerId: String): Result<Boolean> {

@@ -28,6 +28,15 @@ fun WordRevealScreen(
     val isSpy = currentPlayer?.isSpy ?: false
     val isHost = gameRoom?.hostId == currentPlayerId
 
+    // Debug logging
+    LaunchedEffect(currentPlayer) {
+        android.util.Log.d("WordRevealScreen", "Current Player ID: $currentPlayerId")
+        android.util.Log.d("WordRevealScreen", "Current Player: ${currentPlayer?.name}")
+        android.util.Log.d("WordRevealScreen", "Is Spy: $isSpy")
+        android.util.Log.d("WordRevealScreen", "Word: $myWord")
+        android.util.Log.d("WordRevealScreen", "Spy ID from room: ${gameRoom?.spyId}")
+    }
+
     // Auto navigate when game state changes to PLAYING (for non-host players)
     LaunchedEffect(gameRoom?.gameState) {
         if (gameRoom?.gameState == GameState.PLAYING && !isHost) {
@@ -49,42 +58,100 @@ fun WordRevealScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text("Rolünüz ve kelimeniz atanıyor...")
         } else {
-            Text(
-                text = if (isSpy) "Siz Spy'sınız!" else "Siz Normal Oyuncusunuz",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (isSpy) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSpy)
-                        MaterialTheme.colorScheme.errorContainer
-                    else
-                        MaterialTheme.colorScheme.primaryContainer
+            if (isSpy) {
+                // SPY SCREEN
+                Text(
+                    text = "🕵️ SİZ SPY'SINIZ! 🕵️",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error
                 )
-            ) {
-                Column(
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
                 ) {
-                    Text(
-                        text = "Sizin Kelimeniz:",
-                        fontSize = 18.sp
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Sizin göreviniz diğer oyuncuları kandırmak!",
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Sizin Kelimeniz:",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = myWord,
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "⚠️ Diğer oyuncuların kelimesi farklı!",
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            } else {
+                // NORMAL PLAYER SCREEN
+                Text(
+                    text = "👥 Normal Oyuncusunuz",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = myWord,
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Sizin Kelimeniz:",
+                            fontSize = 18.sp
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = myWord,
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "💡 Spy'ı bulun!",
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 

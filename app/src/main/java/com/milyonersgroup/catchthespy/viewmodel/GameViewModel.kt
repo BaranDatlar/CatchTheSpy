@@ -162,32 +162,40 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
                 android.util.Log.d("GameViewModel", "Starting game - Spy ID: $spyId")
                 android.util.Log.d("GameViewModel", "Normal word: ${wordPair.normal}, Spy word: ${wordPair.spy}")
+                android.util.Log.d("GameViewModel", "All player IDs: $playerIds")
 
-                // Create ONE BIG UPDATE MAP - everything at once!
-                val updates = mutableMapOf<String, Any>(
+                // Update room state first
+                val roomUpdates = mapOf(
                     "gameState" to GameState.STARTING.name,
                     "normalWord" to wordPair.normal,
                     "spyWord" to wordPair.spy,
-                    "spyId" to spyId,
-                    "gameStartTime" to System.currentTimeMillis()
+                    "spyId" to spyId
                 )
+                gameRepository.updateRoom(roomCode, roomUpdates)
 
-                // Add each player's updates to the SAME map
+                // Update each player SEPARATELY with setValue (most reliable)
                 room.players.forEach { (playerId, player) ->
                     val isSpy = playerId == spyId
                     val word = if (isSpy) wordPair.spy else wordPair.normal
 
-                    // Update individual fields directly in the path
-                    updates["players/$playerId/isSpy"] = isSpy
-                    updates["players/$playerId/word"] = word
+                    val updatedPlayer = Player(
+                        id = player.id,
+                        name = player.name,
+                        isHost = player.isHost,
+                        isReady = false,
+                        isSpy = isSpy,
+                        word = word
+                    )
 
-                    android.util.Log.d("GameViewModel", "Preparing update for $playerId: isSpy=$isSpy, word=$word")
+                    android.util.Log.d("GameViewModel", "Updating player $playerId (${player.name}): isSpy=$isSpy, word=$word")
+                    gameRepository.updatePlayer(roomCode, playerId, updatedPlayer).onSuccess {
+                        android.util.Log.d("GameViewModel", "Player $playerId updated successfully")
+                    }.onFailure {
+                        android.util.Log.e("GameViewModel", "Failed to update player $playerId", it)
+                    }
                 }
 
-                // ONE SINGLE ATOMIC UPDATE
-                android.util.Log.d("GameViewModel", "Sending atomic update with ${updates.size} fields")
-                gameRepository.updateRoom(roomCode, updates)
-                android.util.Log.d("GameViewModel", "Update completed")
+                android.util.Log.d("GameViewModel", "All updates completed")
 
             } catch (e: Exception) {
                 _error.value = "Oyun başlatılamadı: ${e.message}"
@@ -207,7 +215,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun updateGameState(newState: GameState) {
         viewModelScope.launch {
             val roomCode = _currentRoomCode.value ?: return@launch
-            gameRepository.updateRoom(roomCode, mapOf("gameState" to newState.name))
+            val updates = mutableMapOf<String, Any>("gameState" to newState.name)
+
+            // When transitioning to PLAYING, update the game start time
+            if (newState == GameState.PLAYING) {
+                updates["gameStartTime"] = System.currentTimeMillis()
+            }
+
+            // When transitioning to GUESSING, reset the game start time
+            if (newState == GameState.GUESSING) {
+                updates["gameStartTime"] = 0L
+            }
+
+            gameRepository.updateRoom(roomCode, updates)
         }
     }
     

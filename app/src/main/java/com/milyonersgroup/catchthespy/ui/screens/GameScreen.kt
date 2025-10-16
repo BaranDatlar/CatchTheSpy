@@ -24,30 +24,43 @@ fun GameScreen(
 ) {
     val gameRoom by viewModel.gameRoom.collectAsState()
     val currentPlayerId by viewModel.currentPlayerId.collectAsState()
-    
+
     val currentPlayer = gameRoom?.players?.get(currentPlayerId)
     val isReady = currentPlayer?.isReady ?: false
-    val allReady = gameRoom?.players?.values?.all { it.isReady } ?: false
-    
+
+    // Calculate ready status reactively
+    val players = gameRoom?.players?.values?.toList() ?: emptyList()
+    val readyCount = players.count { it.isReady }
+    val totalPlayers = players.size
+    val allReady = totalPlayers > 0 && players.all { it.isReady }
+
     var timeLeft by remember { mutableStateOf(gameRoom?.gameDuration ?: 300) }
-    
+
+    // Debug logging
+    LaunchedEffect(readyCount, totalPlayers) {
+        android.util.Log.d("GameScreen", "Ready: $readyCount / $totalPlayers")
+    }
+
     LaunchedEffect(gameRoom?.gameStartTime) {
         gameRoom?.let { room ->
             val startTime = room.gameStartTime
             val duration = room.gameDuration
-            
-            while (timeLeft > 0) {
-                val elapsed = (System.currentTimeMillis() - startTime) / 1000
-                timeLeft = (duration - elapsed.toInt()).coerceAtLeast(0)
-                delay(1000)
+
+            if (startTime > 0) {
+                while (timeLeft > 0) {
+                    val elapsed = (System.currentTimeMillis() - startTime) / 1000
+                    timeLeft = (duration - elapsed.toInt()).coerceAtLeast(0)
+                    delay(1000)
+                }
             }
         }
     }
-    
-    // This effect is for the host to update the state once
+
+    // This effect is for the host to update the state once ALL are ready
     LaunchedEffect(allReady) {
         val isHost = gameRoom?.hostId == currentPlayerId
         if (allReady && isHost && gameRoom?.gameState == GameState.PLAYING) {
+            android.util.Log.d("GameScreen", "All players ready! Host transitioning to GUESSING")
             viewModel.updateGameState(GameState.GUESSING)
         }
     }
@@ -55,6 +68,7 @@ fun GameScreen(
     // This effect is for ALL players to navigate when the state changes
     LaunchedEffect(gameRoom?.gameState) {
         if (gameRoom?.gameState == GameState.GUESSING) {
+            android.util.Log.d("GameScreen", "Navigating to Guess screen")
             navController.navigate(Screen.Guess.createRoute(roomCode)) {
                 popUpTo(Screen.Game.createRoute(roomCode)) { inclusive = true }
             }
@@ -128,15 +142,46 @@ fun GameScreen(
         }
         
         Spacer(modifier = Modifier.height(16.dp))
-        
+
+        // Ready counter card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = if (allReady)
+                    MaterialTheme.colorScheme.primaryContainer
+                else
+                    MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Hazır Oyuncular: $readyCount / $totalPlayers",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (allReady)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(
             onClick = { viewModel.setPlayerReady(!isReady) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            colors = if (isReady) 
+            colors = if (isReady)
                 ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-            else 
+            else
                 ButtonDefaults.buttonColors()
         ) {
             Text(
@@ -144,13 +189,15 @@ fun GameScreen(
                 fontSize = 18.sp
             )
         }
-        
+
         if (allReady) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Tüm oyuncular hazır! Tahmin ekranına geçiliyor...",
+                text = "🎉 Tüm oyuncular hazır! Tahmin ekranına geçiliyor...",
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
             )
         }
     }
