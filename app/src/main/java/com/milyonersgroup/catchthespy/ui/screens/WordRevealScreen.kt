@@ -30,7 +30,7 @@ fun WordRevealScreen(
 
     // Auto navigate when game state changes to PLAYING (for non-host players)
     LaunchedEffect(gameRoom?.gameState) {
-        if (gameRoom?.gameState == GameState.PLAYING) {
+        if (gameRoom?.gameState == GameState.PLAYING && !isHost) {
             navController.navigate(Screen.Game.createRoute(roomCode)) {
                 popUpTo(Screen.WordReveal.createRoute(roomCode)) { inclusive = true }
             }
@@ -44,65 +44,75 @@ fun WordRevealScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = if (isSpy) "Siz Spy'sınız!" else "Siz Normal Oyuncusunuz",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (isSpy) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isSpy)
-                    MaterialTheme.colorScheme.errorContainer
-                else
-                    MaterialTheme.colorScheme.primaryContainer
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Sizin Kelimeniz:",
-                    fontSize = 18.sp
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = myWord,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        if (isHost) {
-            Button(
-                onClick = {
-                    viewModel.updateGameState(GameState.PLAYING)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text("Oyunu Başlat", fontSize = 18.sp)
-            }
+        if (myWord.isBlank()) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Rolünüz ve kelimeniz atanıyor...")
         } else {
             Text(
-                text = "Host oyunu başlatmasını bekleyin...",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
+                text = if (isSpy) "Siz Spy'sınız!" else "Siz Normal Oyuncusunuz",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isSpy) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isSpy)
+                        MaterialTheme.colorScheme.errorContainer
+                    else
+                        MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Sizin Kelimeniz:",
+                        fontSize = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = myWord,
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            if (isHost) {
+                Button(
+                    onClick = {
+                        // Host starts the game and navigates with everyone
+                        viewModel.updateGameState(GameState.PLAYING)
+                        navController.navigate(Screen.Game.createRoute(roomCode)) {
+                            popUpTo(Screen.WordReveal.createRoute(roomCode)) { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("Oyunu Başlat", fontSize = 18.sp)
+                }
+            } else {
+                Text(
+                    text = "Host oyunu başlatmasını bekleyin...",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }

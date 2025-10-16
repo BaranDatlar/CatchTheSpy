@@ -44,17 +44,19 @@ fun GameScreen(
         }
     }
     
-    LaunchedEffect(allReady, gameRoom?.gameState) {
-        if (allReady && gameRoom?.gameState == GameState.PLAYING) {
+    // This effect is for the host to update the state once
+    LaunchedEffect(allReady) {
+        val isHost = gameRoom?.hostId == currentPlayerId
+        if (allReady && isHost && gameRoom?.gameState == GameState.PLAYING) {
             viewModel.updateGameState(GameState.GUESSING)
         }
-        
+    }
+
+    // This effect is for ALL players to navigate when the state changes
+    LaunchedEffect(gameRoom?.gameState) {
         if (gameRoom?.gameState == GameState.GUESSING) {
-            val isHost = gameRoom?.hostId == currentPlayerId
-            if (isHost) {
-                navController.navigate(Screen.Guess.createRoute(roomCode)) {
-                    popUpTo(Screen.Game.createRoute(roomCode)) { inclusive = true }
-                }
+            navController.navigate(Screen.Guess.createRoute(roomCode)) {
+                popUpTo(Screen.Game.createRoute(roomCode)) { inclusive = true }
             }
         }
     }

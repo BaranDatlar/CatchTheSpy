@@ -24,20 +24,14 @@ fun LobbyScreen(
     val gameRoom by viewModel.gameRoom.collectAsState()
     val currentPlayerId by viewModel.currentPlayerId.collectAsState()
     
-    LaunchedEffect(gameRoom?.gameState) {
-        when (gameRoom?.gameState) {
-            GameState.STARTING -> {
-                navController.navigate(Screen.WordReveal.createRoute(roomCode)) {
-                    popUpTo(Screen.Lobby.createRoute(roomCode)) { inclusive = true }
-                }
+    val currentPlayer = gameRoom?.players?.get(currentPlayerId)
+
+    LaunchedEffect(gameRoom?.gameState, currentPlayer?.word) {
+        // Navigate only when the game is starting AND the current player has a word.
+        if (gameRoom?.gameState == GameState.STARTING && !currentPlayer?.word.isNullOrBlank()) {
+            navController.navigate(Screen.WordReveal.createRoute(roomCode)) {
+                popUpTo(Screen.Lobby.createRoute(roomCode)) { inclusive = true }
             }
-            else -> {}
-        }
-    }
-    
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.leaveRoom()
         }
     }
     
